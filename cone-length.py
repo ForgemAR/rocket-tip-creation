@@ -61,13 +61,11 @@ def produce_slice(lower, upper, outer_offset=0.0):
         r1 = cone_at(f)
         r2 = cone_at(f + step)
         offset = i * step + outer_offset
-        res.append("translate([0, 0, %(offset)f]) cylinder(h=%(step)f, r1=%(r1)f, r2=%(r2)f, $fn=%(fn)i);" % dict(
-            step=step,
-            r1=r1,
-            r2=r2,
-            offset=offset,
-            fn=fn
-            ))
+        res.append(
+            solid.translate([0, 0, offset])(
+                solid.cylinder(h=step, r1=r1, r2=r2)
+                )
+        )
     return res
 
 
@@ -82,7 +80,9 @@ def scaffold(color=[0, 0, 1, 1]):
             solid.cube(center=True)
             )
     )
-    return solid.scad_render(solid.color(color)(h))
+    # scale & move in Z to ensure overlap
+    h = solid.translate([0, 0, -(cone_length * .1)/2.0])(solid.scale([1, 1, 1.1])(h))
+    return solid.color(color)(h)
 
 
 def full_cone():
@@ -90,8 +90,12 @@ def full_cone():
     for slice_num, (lower, upper) in enumerate(slice_parameters()):
         cylinders.extend(produce_slice(lower, upper, mdf_strength * slice_num))
 
-    print "translate([0, 0, %(cone_length)f]) rotate([0, 180, 0]){" % dict(cone_length=cone_length)
-    print "\n".join(cylinders)
-    print "}"
+    return solid.translate([0, 0, cone_length])(
+        solid.rotate([0, 180, 0])(
+            solid.union()(*cylinders)
+            )
+        )
 
-print scaffold()
+print "$fn=%s;" % fn
+print solid.scad_render(full_cone() - scaffold())
+#print solid.scad_render(scaffold())
