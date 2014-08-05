@@ -69,19 +69,19 @@ def produce_slice(lower, upper, outer_offset=0.0):
     return res
 
 
-def scaffold(color=[0, 0, 1, 1]):
-    h = solid.translate([diameter / 2.0, 0, cone_length / 2.0])(
-        solid.scale([diameter, diameter, cone_length])(
+def scaffold(length, color=[0, 0, 1, 1]):
+    h = solid.translate([diameter / 2.0, 0, length / 2.0])(
+        solid.scale([diameter, diameter, length])(
             solid.cube(center=True)
             )
-    ) + solid.translate([0, 0, cone_length / 2.0])(
+    ) + solid.translate([0, 0, length / 2.0])(
         solid.scale([center_notch + tool_radius * 2,
-                     center_notch, cone_length])(
+                     center_notch, length])(
             solid.cube(center=True)
             )
     )
     # scale & move in Z to ensure overlap
-    h = solid.translate([0, 0, -(cone_length * .1)/2.0])(solid.scale([1, 1, 1.1])(h))
+    h = solid.translate([0, 0, -(length * .1)/2.0])(solid.scale([1, 1, 1.1])(h))
     return solid.color(color)(h)
 
 
@@ -96,6 +96,7 @@ def full_cone():
             )
         )
 
-print "$fn=%s;" % fn
-print solid.scad_render(full_cone() - scaffold())
-#print solid.scad_render(scaffold())
+def main():
+    print "$fn=%s;" % fn
+    print solid.scad_render(full_cone() - scaffold(cone_length))
+    #print solid.scad_render(scaffold())
