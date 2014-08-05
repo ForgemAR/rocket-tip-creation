@@ -50,12 +50,12 @@ def frange(start, end, step):
 
 cylinders = []
 
-for lower, upper in slice_parameters():
+for slice_num, (lower, upper) in enumerate(slice_parameters()):
     step = (upper - lower) / slice_steps
     for i, f in enumerate(frange(lower, upper, step)):
         r1 = cone_at(f)
         r2 = cone_at(f + step)
-        offset = i * step + lower
+        offset = i * step + mdf_strength * slice_num
         cylinders.append("translate([0, 0, %(offset)f]) cylinder(h=%(step)f, r1=%(r1)f, r2=%(r2)f, $fn=%(fn)i);" % dict(
             step=step,
             r1=r1,
@@ -64,4 +64,6 @@ for lower, upper in slice_parameters():
             fn=fn
             ))
 
+print "translate([0, 0, %(cone_length)f]) rotate([0, 180, 0]){" % dict(cone_length=cone_length)
 print "\n".join(cylinders)
+print "}"
