@@ -1,9 +1,12 @@
 # this script will solve for the length of the cone so
 # that we know the length of it for a given diameter.
+import argparse
 import solid
 
 from sympy.solvers import solve
 from sympy import Symbol
+
+EPSILON = 1e-10
 
 a = 0.648148
 b = 0.0
@@ -49,8 +52,12 @@ def slice_parameters():
         yield lower, min(lower + mdf_strength, bottom_cone_length)
         lower += mdf_strength
 
+
+def feq(v):
+    return abs(v) < EPSILON
+
 def frange(start, end, step):
-    while start < end:
+    while not feq(start - end):
         yield start
         start += step
 
@@ -96,7 +103,31 @@ def full_cone():
             )
         )
 
-def main():
+
+def single_slice(index):
+    for slice_num, (lower, upper) in enumerate(slice_parameters()):
+        if slice_num == index:
+            return solid.translate([0, 0, upper - lower])(
+                solid.rotate([0, 180, 0])(
+                    solid.union()(*produce_slice(lower, upper))
+                    ))
+    raise Exception("Non-existent slice %i, max: %i!" % (index, slice_num))
+
+
+def preamble():
     print "$fn=%s;" % fn
-    print solid.scad_render(full_cone() - scaffold(cone_length))
-    #print solid.scad_render(scaffold())
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--slice", type=int)
+    args = parser.parse_args()
+
+    if args.slice is not None:
+        sl = single_slice(args.slice)
+        preamble()
+        print solid.scad_render(sl)
+    else:
+        preamble()
+        print solid.scad_render(full_cone() - scaffold(cone_length))
+        #print solid.scad_render(scaffold())
