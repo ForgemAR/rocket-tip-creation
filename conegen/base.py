@@ -121,10 +121,13 @@ def preamble():
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--slice", type=int)
+    parser.add_argument("-s", "--sub-scaffold", action="store_true")
     args = parser.parse_args()
 
     if args.slice is not None:
         sl = single_slice(args.slice)
+        if args.sub_scaffold:
+            sl = sl - scaffold(mdf_strength)
         preamble()
         print solid.scad_render(sl)
     else:
